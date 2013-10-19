@@ -26,7 +26,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 
 @NetworkMod(clientSideRequired=true,serverSideRequired=false)
-@Mod(modid=CoreTools.modid,name="Tools Mod",version="#1")
+@Mod(modid=CoreTools.modid,name="Tools Mod",version="#2")
 public class CoreTools {
 	
 	public static final String modid = "Tools";
@@ -37,6 +37,7 @@ public class CoreTools {
 	public static boolean enableCoreSteel			= false;
 	public static boolean enableCoreStickSteel		= false;
 	public static boolean enableCoreIngotRedstone	= false;
+	public static boolean commonConfig;
 	
 	public static int emeraldID, netherrackID, obsidianID, redstoneID, steelID;
 	public static boolean enableEmerald, enableNetherrack, enableObsidian, enableRedstone, enableSteel;
@@ -55,30 +56,53 @@ public class CoreTools {
 	
 	@PreInit
 	public void preInit(FMLPreInitializationEvent event) {
-		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
-		config.load();
-			emeraldID = config.get("item", "emeraldToolsID", ItemID+0, "5 tools (this+0 to this+4)").getInt()-256;
-			netherrackID = config.get("item", "netherrackToolsID", ItemID+5, "5 tools (this+0 to this+4)").getInt()-256;
-			obsidianID = config.get("item", "obsidianToolsID", ItemID+10, "5 tools (this+0 to this+4)").getInt()-256;
-			redstoneID = config.get("item", "redstoneToolsID", ItemID+15, "5 tools (this+0 to this+4)").getInt()-256;
-			steelID = config.get("item", "steelToolsID", ItemID+20, "5 tools (this+0 to this+4)").getInt()-256;
-			
-			enableEmerald = config.get("enable", "enableEmerald", true).getBoolean(true);
-			enableNetherrack = config.get("enable", "enableNetherrack", true).getBoolean(true);
-			enableObsidian = config.get("enable", "enableObsidian", true).getBoolean(true);
-			enableRedstone = config.get("enable", "enableRedstone", true).getBoolean(true);
-			enableSteel = config.get("enable", "enableSteel", true).getBoolean(true);
-		config.save();
+		String categoryBlock, categoryItem, categoryGeneral, categoryEnable, categoryGeneralCore;
 		
-		Configuration coreConfig = new Configuration(new File(event.getSuggestedConfigurationFile().getPath().replace(modid, "FlannCore")));
+		Configuration coreConfig = new Configuration(new File(event.getSuggestedConfigurationFile().getPath().replace("Tools", "FlannCore")));
 		coreConfig.load();
-			if(enableCoreSteel && enableSteel)
-				set(coreConfig, "general", "enableSteel", true);
+			commonConfig = coreConfig.get("core", "combineConfigs", false).getBoolean(false);
+			if(commonConfig){
+				String modname = "tools";
+				categoryBlock = modname+"_Block";
+				categoryItem = modname+"_Item";
+				categoryGeneral = modname+"_General";
+				categoryEnable = modname+"_Enable";
+				categoryGeneralCore = "core_General";
+			}else{
+				categoryBlock = "block";
+				categoryItem = "item";
+				categoryGeneral = "general";
+				categoryEnable = "enable";
+				categoryGeneralCore = "general";
+			}
+			if(enableCoreSteel)
+				set(coreConfig, categoryGeneralCore, "enableSteel", true);
 			if(enableCoreStickSteel)
-				set(coreConfig, "general", "enableStickSteel", true);
-			if(enableCoreIngotRedstone && enableRedstone)
-				set(coreConfig, "general", "enableIngotRedstone", true);
+				set(coreConfig, categoryGeneralCore, "enableStickSteel", true);
+			if(enableCoreIngotRedstone)
+				set(coreConfig, categoryGeneralCore, "enableIngotRedstone", true);
 		coreConfig.save();
+		
+		Configuration config;
+		if(commonConfig == false){
+			config = new Configuration(event.getSuggestedConfigurationFile());
+		}else{
+			config = coreConfig;
+		}
+		
+		config.load();
+			emeraldID = config.get(categoryItem, "emeraldToolsID", ItemID+0, "5 tools (this+0 to this+4)").getInt()-256;
+			netherrackID = config.get(categoryItem, "netherrackToolsID", ItemID+5, "5 tools (this+0 to this+4)").getInt()-256;
+			obsidianID = config.get(categoryItem, "obsidianToolsID", ItemID+10, "5 tools (this+0 to this+4)").getInt()-256;
+			redstoneID = config.get(categoryItem, "redstoneToolsID", ItemID+15, "5 tools (this+0 to this+4)").getInt()-256;
+			steelID = config.get(categoryItem, "steelToolsID", ItemID+20, "5 tools (this+0 to this+4)").getInt()-256;
+			
+			enableEmerald = config.get(categoryEnable, "enableEmerald", true).getBoolean(true);
+			enableNetherrack = config.get(categoryEnable, "enableNetherrack", true).getBoolean(true);
+			enableObsidian = config.get(categoryEnable, "enableObsidian", true).getBoolean(true);
+			enableRedstone = config.get(categoryEnable, "enableRedstone", true).getBoolean(true);
+			enableSteel = config.get(categoryEnable, "enableSteel", true).getBoolean(true);
+		config.save();
 		
 		init_pre();
 	}
